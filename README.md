@@ -16,8 +16,6 @@ A simple Docker service that periodically checks your public IP address and prov
 ### Using Docker Compose
 
 ```yaml
-version: '3.8'
-
 services:
   public-ip-monitor:
     image: ghcr.io/pcaro/docker-public-ip:latest
