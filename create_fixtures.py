@@ -140,8 +140,8 @@ def create_fixtures(db_path="data/ip_history.db"):
         if check_count % 1000 == 0:
             print(f"Generated {check_count} checks...")
         
-        # Advance time by 30 seconds (default check interval)
-        check_time += timedelta(seconds=30)
+        # Advance time by 300 seconds (default check interval)
+        check_time += timedelta(seconds=300)
     
     # Commit changes
     conn.commit()

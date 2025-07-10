@@ -24,7 +24,7 @@ services:
     volumes:
       - ./data:/data
     environment:
-      - CHECK_INTERVAL=30  # Check interval in seconds (default: 30)
+      - CHECK_INTERVAL=300  # Check interval in seconds (default: 300)
       - WEB_PORT=8080     # Web interface port (default: 8080)
       - WEB_HOST=0.0.0.0  # Web interface host (default: 0.0.0.0)
       - DB_PATH=/data/ip_history.db  # Database path (default: /data/ip_history.db)
@@ -38,13 +38,13 @@ docker run -d \
   --name public-ip-monitor \
   -p 8080:8080 \
   -v $(pwd)/data:/data \
-  -e CHECK_INTERVAL=30 \
+  -e CHECK_INTERVAL=300 \
   ghcr.io/pcaro/docker-public-ip:latest
 ```
 
 ## Environment Variables
 
-- `CHECK_INTERVAL`: Interval between IP checks in seconds (default: 30)
+- `CHECK_INTERVAL`: Interval between IP checks in seconds (default: 300)
 - `WEB_PORT`: Port for the web interface (default: 8080)
 - `WEB_HOST`: Host for the web interface (default: 0.0.0.0)
 - `DB_PATH`: Path to the SQLite database (default: /data/ip_history.db)

@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL", "30"))
+CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL", "300"))
 DB_PATH = Path(os.getenv("DB_PATH", "/data/ip_history.db"))
 WEB_PORT = int(os.getenv("WEB_PORT", "8080"))
 WEB_HOST = os.getenv("WEB_HOST", "0.0.0.0")

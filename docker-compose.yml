@@ -6,7 +6,7 @@ services:
     volumes:
       - ./data:/data
     environment:
-      - CHECK_INTERVAL=30
+      - CHECK_INTERVAL=300
       - WEB_PORT=8080
       - WEB_HOST=0.0.0.0
       - DB_PATH=/data/ip_history.db
