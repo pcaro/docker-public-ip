@@ -1,13 +1,13 @@
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy the project files
-COPY pyproject.toml .
-COPY src/ src/
+# Copy project files
+COPY . .
 
-# Install the project
-RUN uv pip install --system -e .
+# Install Python dependencies
+RUN pip install --no-cache-dir uv \
+    && uv pip install --system -r requirements.txt
 
 # Create data directory
 RUN mkdir -p /data
@@ -16,4 +16,4 @@ RUN mkdir -p /data
 EXPOSE 8080
 
 # Run the application
-CMD ["python", "-m", "docker_public_ip"]
+CMD ["uv", "run", "python", "-m", "docker_public_ip"]
