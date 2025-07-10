@@ -18,7 +18,7 @@ A simple Docker service that periodically checks your public IP address and prov
 ```yaml
 services:
   public-ip-monitor:
-    image: ghcr.io/pcaro/docker-public-ip:latest
+    image: pcarorevuelta/docker-public-ip:latest
     ports:
       - "8080:8080"
     volumes:
@@ -41,7 +41,7 @@ docker run -d \
   -v $(pwd)/data:/data \
   -v $(pwd)/config:/config \
   -e CHECK_INTERVAL=300 \
-  ghcr.io/pcaro/docker-public-ip:latest
+  pcarorevuelta/docker-public-ip:latest
 ```
 
 ## Environment Variables
