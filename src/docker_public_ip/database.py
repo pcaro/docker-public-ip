@@ -15,9 +15,10 @@ class Database:
 
     def init_db(self):
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS ip_checks (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -27,18 +28,23 @@ class Database:
                     success BOOLEAN DEFAULT 1,
                     error_message TEXT
                 )
-            """)
-            
-            conn.execute("""
+            """
+            )
+
+            conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_timestamp 
                 ON ip_checks (timestamp DESC)
-            """)
-            
-            conn.execute("""
+            """
+            )
+
+            conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_ip_address 
                 ON ip_checks (ip_address)
-            """)
-            
+            """
+            )
+
             conn.commit()
             logger.info(f"Database initialized at {self.db_path}")
 
@@ -117,22 +123,138 @@ class Database:
             )
             return [dict(row) for row in cursor.fetchall()]
 
-    def get_hourly_stats(self, days: int = 7) -> List[Dict[str, Any]]:
+    def get_ip_change_stats(self) -> Dict[str, Any]:
+        """Get statistics about IP changes per day/week/month"""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
+
+            # Get daily IP changes for last 30 days
+            daily_cursor = conn.execute(
+                """
+                WITH ip_changes AS (
+                    SELECT 
+                        DATE(timestamp) as date,
+                        ip_address,
+                        ROW_NUMBER() OVER (PARTITION BY DATE(timestamp) ORDER BY timestamp) as rn,
+                        LAG(ip_address) OVER (ORDER BY timestamp) as previous_ip
+                    FROM ip_checks
+                    WHERE success = 1 AND ip_address IS NOT NULL
+                        AND timestamp > datetime('now', '-30 days')
+                )
+                SELECT 
+                    date,
+                    COUNT(CASE WHEN ip_address != previous_ip THEN 1 END) as changes
+                FROM ip_changes
+                WHERE rn = 1 OR ip_address != previous_ip
+                GROUP BY date
+                ORDER BY date DESC
+                """
+            )
+            daily_changes = [dict(row) for row in daily_cursor.fetchall()]
+
+            # Get weekly IP changes for last 12 weeks
+            weekly_cursor = conn.execute(
+                """
+                WITH ip_changes AS (
+                    SELECT 
+                        strftime('%Y-W%W', timestamp) as week,
+                        ip_address,
+                        LAG(ip_address) OVER (ORDER BY timestamp) as previous_ip
+                    FROM ip_checks
+                    WHERE success = 1 AND ip_address IS NOT NULL
+                        AND timestamp > datetime('now', '-84 days')
+                )
+                SELECT 
+                    week,
+                    COUNT(CASE WHEN ip_address != previous_ip THEN 1 END) as changes
+                FROM ip_changes
+                WHERE ip_address != previous_ip OR previous_ip IS NULL
+                GROUP BY week
+                ORDER BY week DESC
+                """
+            )
+            weekly_changes = [dict(row) for row in weekly_cursor.fetchall()]
+
+            # Get monthly IP changes for last 12 months
+            monthly_cursor = conn.execute(
+                """
+                WITH ip_changes AS (
+                    SELECT 
+                        strftime('%Y-%m', timestamp) as month,
+                        ip_address,
+                        LAG(ip_address) OVER (ORDER BY timestamp) as previous_ip
+                    FROM ip_checks
+                    WHERE success = 1 AND ip_address IS NOT NULL
+                        AND timestamp > datetime('now', '-12 months')
+                )
+                SELECT 
+                    month,
+                    COUNT(CASE WHEN ip_address != previous_ip THEN 1 END) as changes
+                FROM ip_changes
+                WHERE ip_address != previous_ip OR previous_ip IS NULL
+                GROUP BY month
+                ORDER BY month DESC
+                """
+            )
+            monthly_changes = [dict(row) for row in monthly_cursor.fetchall()]
+
+            return {
+                "daily": daily_changes,
+                "weekly": weekly_changes,
+                "monthly": monthly_changes,
+            }
+
+    def get_ip_stability_stats(self) -> Dict[str, Any]:
+        """Get statistics about IP stability"""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+
+            # Average time between IP changes
+            cursor = conn.execute(
+                """
+                WITH ip_changes AS (
+                    SELECT 
+                        timestamp,
+                        ip_address,
+                        LAG(timestamp) OVER (ORDER BY timestamp) as previous_timestamp
+                    FROM ip_checks
+                    WHERE success = 1 AND ip_address IS NOT NULL
+                        AND ip_address != (
+                            SELECT ip_address 
+                            FROM ip_checks AS ic2 
+                            WHERE ic2.timestamp < ip_checks.timestamp 
+                                AND ic2.success = 1 
+                                AND ic2.ip_address IS NOT NULL
+                            ORDER BY ic2.timestamp DESC 
+                            LIMIT 1
+                        )
+                )
+                SELECT 
+                    AVG(CAST((julianday(timestamp) - julianday(previous_timestamp)) * 24 * 60 AS REAL)) as avg_minutes_between_changes,
+                    COUNT(*) as total_changes,
+                    MIN(CAST((julianday(timestamp) - julianday(previous_timestamp)) * 24 * 60 AS REAL)) as min_minutes_between_changes,
+                    MAX(CAST((julianday(timestamp) - julianday(previous_timestamp)) * 24 * 60 AS REAL)) as max_minutes_between_changes
+                FROM ip_changes
+                WHERE previous_timestamp IS NOT NULL
+                """
+            )
+            stability = dict(cursor.fetchone() or {})
+
+            # Most frequent IPs
             cursor = conn.execute(
                 """
                 SELECT 
-                    strftime('%Y-%m-%d %H:00:00', timestamp) as hour,
-                    COUNT(DISTINCT ip_address) as unique_ips,
-                    COUNT(*) as total_checks,
-                    AVG(response_time_ms) as avg_response_time
+                    ip_address,
+                    COUNT(*) as frequency,
+                    MIN(timestamp) as first_seen,
+                    MAX(timestamp) as last_seen
                 FROM ip_checks
-                WHERE timestamp > datetime('now', '-' || ? || ' days')
-                    AND success = 1
-                GROUP BY hour
-                ORDER BY hour DESC
-                """,
-                (days,),
+                WHERE success = 1 AND ip_address IS NOT NULL
+                GROUP BY ip_address
+                ORDER BY frequency DESC
+                LIMIT 10
+                """
             )
-            return [dict(row) for row in cursor.fetchall()]
+            frequent_ips = [dict(row) for row in cursor.fetchall()]
+
+            return {"stability": stability, "frequent_ips": frequent_ips}

@@ -13,10 +13,11 @@ def create_app():
 
     @app.route("/")
     def index():
-        recent_checks = db.get_recent_checks(limit=1000)
+        recent_checks = db.get_recent_checks(limit=100)
         ip_changes = db.get_ip_changes()
         service_stats = db.get_service_stats()
-        hourly_stats = db.get_hourly_stats()
+        change_stats = db.get_ip_change_stats()
+        stability_stats = db.get_ip_stability_stats()
 
         # Get current IP
         current_ip = None
@@ -27,32 +28,43 @@ def create_app():
                 last_check = check["timestamp"]
                 break
 
-        # Calculate statistics
+        # Calculate basic statistics
         total_checks = len(recent_checks)
         successful_checks = sum(1 for c in recent_checks if c["success"])
         success_rate = (
             round(successful_checks / total_checks * 100, 1) if total_checks > 0 else 0
         )
 
-        # Prepare chart data for response times
-        response_time_data = [
+        # Prepare chart data for daily IP changes
+        daily_changes_data = [
             {
-                "x": [stat["service"].replace("https://", "") for stat in service_stats],
-                "y": [stat["avg_response_time"] or 0 for stat in service_stats],
+                "x": [stat["date"] for stat in change_stats["daily"]],
+                "y": [stat["changes"] for stat in change_stats["daily"]],
                 "type": "bar",
+                "name": "Changes per Day",
                 "marker": {"color": "rgb(55, 83, 109)"},
             }
         ]
 
-        # Prepare chart data for checks over time
-        checks_over_time_data = [
+        # Prepare chart data for weekly IP changes
+        weekly_changes_data = [
             {
-                "x": [stat["hour"] for stat in hourly_stats],
-                "y": [stat["total_checks"] for stat in hourly_stats],
-                "type": "scatter",
-                "mode": "lines+markers",
-                "name": "Total Checks",
-                "line": {"color": "rgb(55, 83, 109)"},
+                "x": [stat["week"] for stat in change_stats["weekly"]],
+                "y": [stat["changes"] for stat in change_stats["weekly"]],
+                "type": "bar",
+                "name": "Changes per Week",
+                "marker": {"color": "rgb(26, 118, 255)"},
+            }
+        ]
+
+        # Prepare chart data for monthly IP changes
+        monthly_changes_data = [
+            {
+                "x": [stat["month"] for stat in change_stats["monthly"]],
+                "y": [stat["changes"] for stat in change_stats["monthly"]],
+                "type": "bar",
+                "name": "Changes per Month",
+                "marker": {"color": "rgb(255, 99, 132)"},
             }
         ]
 
@@ -65,8 +77,10 @@ def create_app():
             ip_change_count=len(ip_changes),
             ip_changes=ip_changes[:20],  # Show last 20 changes
             service_stats=service_stats,
-            response_time_data=response_time_data,
-            checks_over_time_data=checks_over_time_data,
+            daily_changes_data=daily_changes_data,
+            weekly_changes_data=weekly_changes_data,
+            monthly_changes_data=monthly_changes_data,
+            stability_stats=stability_stats,
         )
 
     @app.route("/health")

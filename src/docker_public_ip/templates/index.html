@@ -95,27 +95,59 @@
 
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>Total Checks</h3>
-                <div style="font-size: 24px; font-weight: bold;">{{ total_checks }}</div>
-            </div>
-            <div class="stat-card">
-                <h3>IP Changes</h3>
+                <h3>Total IP Changes</h3>
                 <div style="font-size: 24px; font-weight: bold;">{{ ip_change_count }}</div>
             </div>
             <div class="stat-card">
-                <h3>Success Rate</h3>
+                <h3>Most Frequent IP</h3>
+                <div style="font-size: 18px; font-weight: bold; font-family: monospace;">
+                    {% if stability_stats.frequent_ips %}
+                        {{ stability_stats.frequent_ips[0].ip_address }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </div>
+                <div style="font-size: 12px; color: #6c757d;">
+                    {% if stability_stats.frequent_ips %}
+                        Used {{ stability_stats.frequent_ips[0].frequency }} times
+                    {% endif %}
+                </div>
+            </div>
+            <div class="stat-card">
+                <h3>Avg Time Between Changes</h3>
+                <div style="font-size: 24px; font-weight: bold;">
+                    {% if stability_stats.stability.avg_minutes_between_changes %}
+                        {% set hours = (stability_stats.stability.avg_minutes_between_changes / 60) | round(1) %}
+                        {% if hours >= 24 %}
+                            {{ (hours / 24) | round(1) }} days
+                        {% else %}
+                            {{ hours }} hours
+                        {% endif %}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </div>
+            </div>
+            <div class="stat-card">
+                <h3>Service Success Rate</h3>
                 <div style="font-size: 24px; font-weight: bold;">{{ success_rate }}%</div>
+                <div style="font-size: 12px; color: #6c757d;">{{ total_checks }} total checks</div>
             </div>
         </div>
 
         <div class="chart-container">
-            <h2>Response Times by Service</h2>
-            <div id="responseTimeChart"></div>
+            <h2>IP Changes per Day (Last 30 Days)</h2>
+            <div id="dailyChangesChart"></div>
         </div>
 
         <div class="chart-container">
-            <h2>Checks Over Time</h2>
-            <div id="checksOverTimeChart"></div>
+            <h2>IP Changes per Week (Last 12 Weeks)</h2>
+            <div id="weeklyChangesChart"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>IP Changes per Month (Last 12 Months)</h2>
+            <div id="monthlyChangesChart"></div>
         </div>
 
         <h2>IP Change History</h2>
@@ -138,13 +170,35 @@
             </tbody>
         </table>
 
-        <h2>Service Statistics</h2>
+        <h2>Most Frequent IPs</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>IP Address</th>
+                    <th>Frequency</th>
+                    <th>First Seen</th>
+                    <th>Last Seen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ip in stability_stats.frequent_ips[:10] %}
+                <tr>
+                    <td style="font-family: monospace;">{{ ip.ip_address }}</td>
+                    <td>{{ ip.frequency }}</td>
+                    <td>{{ ip.first_seen }}</td>
+                    <td>{{ ip.last_seen }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Service Reliability</h2>
         <table>
             <thead>
                 <tr>
                     <th>Service</th>
-                    <th>Total Checks</th>
                     <th>Success Rate</th>
+                    <th>Total Checks</th>
                     <th>Avg Response Time</th>
                 </tr>
             </thead>
@@ -152,8 +206,8 @@
                 {% for stat in service_stats %}
                 <tr>
                     <td>{{ stat.service.replace('https://', '') }}</td>
-                    <td>{{ stat.total_checks }}</td>
                     <td>{{ "%.1f"|format((stat.successful_checks / stat.total_checks * 100) if stat.total_checks > 0 else 0) }}%</td>
+                    <td>{{ stat.total_checks }}</td>
                     <td>{{ "%.0f"|format(stat.avg_response_time or 0) }}ms</td>
                 </tr>
                 {% endfor %}
@@ -162,25 +216,35 @@
     </div>
 
     <script>
-        // Response Time Chart
-        var responseTimeData = {{ response_time_data|tojson }};
-        var responseTimeLayout = {
+        // Daily Changes Chart
+        var dailyChangesData = {{ daily_changes_data|tojson }};
+        var dailyChangesLayout = {
             title: false,
-            xaxis: { title: 'Service' },
-            yaxis: { title: 'Response Time (ms)' },
+            xaxis: { title: 'Date' },
+            yaxis: { title: 'IP Changes' },
             showlegend: false
         };
-        Plotly.newPlot('responseTimeChart', responseTimeData, responseTimeLayout);
+        Plotly.newPlot('dailyChangesChart', dailyChangesData, dailyChangesLayout);
 
-        // Checks Over Time Chart
-        var checksOverTimeData = {{ checks_over_time_data|tojson }};
-        var checksOverTimeLayout = {
+        // Weekly Changes Chart
+        var weeklyChangesData = {{ weekly_changes_data|tojson }};
+        var weeklyChangesLayout = {
             title: false,
-            xaxis: { title: 'Time' },
-            yaxis: { title: 'Checks per Hour' },
-            showlegend: true
+            xaxis: { title: 'Week' },
+            yaxis: { title: 'IP Changes' },
+            showlegend: false
         };
-        Plotly.newPlot('checksOverTimeChart', checksOverTimeData, checksOverTimeLayout);
+        Plotly.newPlot('weeklyChangesChart', weeklyChangesData, weeklyChangesLayout);
+
+        // Monthly Changes Chart
+        var monthlyChangesData = {{ monthly_changes_data|tojson }};
+        var monthlyChangesLayout = {
+            title: false,
+            xaxis: { title: 'Month' },
+            yaxis: { title: 'IP Changes' },
+            showlegend: false
+        };
+        Plotly.newPlot('monthlyChangesChart', monthlyChangesData, monthlyChangesLayout);
 
         // Auto-refresh every 30 seconds
         setTimeout(function() {

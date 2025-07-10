@@ -16,19 +16,19 @@ def signal_handler(signum, frame):
 
 def main():
     logger.info("Starting Docker Public IP Monitor")
-    
+
     # Set up signal handlers
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
-    
+
     # Start IP checker
     checker = IPChecker()
     checker.start()
-    
+
     # Start web server in a separate thread
     web_thread = threading.Thread(target=run_web_server, args=(checker,), daemon=True)
     web_thread.start()
-    
+
     # Keep the main thread alive
     try:
         while True:
