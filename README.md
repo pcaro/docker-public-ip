@@ -104,6 +104,14 @@ You can customize the list of IP check services by:
    - Protocol (https://) is optional - will be added automatically
    - Empty lines are ignored
 
+## Unraid Template
+
+For Unraid users, use this icon URL in your template:
+
+```
+https://raw.githubusercontent.com/pcaro/docker-public-ip/main/icon.svg
+```
+
 ## Development
 
 ```bash

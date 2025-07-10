@@ -1,0 +1,48 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="globeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="url(#bgGrad)"/>
+  
+  <!-- Globe/Earth -->
+  <circle cx="256" cy="220" r="120" fill="url(#globeGrad)" stroke="#ffffff" stroke-width="4"/>
+  
+  <!-- Meridian lines -->
+  <path d="M 256 100 Q 300 160 256 220 Q 212 280 256 340" stroke="#ffffff" stroke-width="3" fill="none" opacity="0.7"/>
+  <path d="M 256 100 Q 212 160 256 220 Q 300 280 256 340" stroke="#ffffff" stroke-width="3" fill="none" opacity="0.7"/>
+  
+  <!-- Horizontal lines -->
+  <line x1="136" y1="180" x2="376" y2="180" stroke="#ffffff" stroke-width="2" opacity="0.6"/>
+  <line x1="136" y1="220" x2="376" y2="220" stroke="#ffffff" stroke-width="2" opacity="0.6"/>
+  <line x1="136" y1="260" x2="376" y2="260" stroke="#ffffff" stroke-width="2" opacity="0.6"/>
+  
+  <!-- IP Address display -->
+  <rect x="180" y="370" width="152" height="40" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="2"/>
+  <text x="256" y="395" text-anchor="middle" font-family="monospace" font-size="18" font-weight="bold" fill="#374151">192.168.1.1</text>
+  
+  <!-- Monitor/Chart icon -->
+  <rect x="360" y="120" width="80" height="60" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="2"/>
+  <rect x="368" y="128" width="64" height="44" fill="#f3f4f6"/>
+  
+  <!-- Chart bars -->
+  <rect x="375" y="150" width="8" height="15" fill="#10b981"/>
+  <rect x="387" y="145" width="8" height="20" fill="#10b981"/>
+  <rect x="399" y="140" width="8" height="25" fill="#10b981"/>
+  <rect x="411" y="148" width="8" height="17" fill="#10b981"/>
+  <rect x="423" y="152" width="8" height="13" fill="#10b981"/>
+  
+  <!-- Docker logo hint -->
+  <circle cx="120" cy="380" r="25" fill="#0db7ed"/>
+  <rect x="110" y="370" width="20" height="20" fill="#ffffff" opacity="0.9"/>
+  <rect x="113" y="373" width="14" height="14" fill="#0db7ed"/>
+  <rect x="116" y="376" width="8" height="8" fill="#ffffff"/>
+</svg>
