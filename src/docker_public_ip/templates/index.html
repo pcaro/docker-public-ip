@@ -71,6 +71,13 @@
         tr:hover {
             background-color: #f8f9fa;
         }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
         .success {
             color: #28a745;
         }
@@ -205,7 +212,7 @@
             <tbody>
                 {% for stat in service_stats %}
                 <tr>
-                    <td>{{ stat.service.replace('https://', '') }}</td>
+                    <td><a href="{{ stat.service }}" target="_blank" rel="noopener noreferrer">{{ stat.service.replace('https://', '') }}</a></td>
                     <td>{{ "%.1f"|format((stat.successful_checks / stat.total_checks * 100) if stat.total_checks > 0 else 0) }}%</td>
                     <td>{{ stat.total_checks }}</td>
                     <td>{{ "%.0f"|format(stat.avg_response_time or 0) }}ms</td>
