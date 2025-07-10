@@ -1,13 +1,13 @@
-FROM python:3.12-slim
+FROM ghcr.io/astral-sh/uv:python3.12-alpine
 
+# Set working directory
 WORKDIR /app
 
-# Copy project files
+# Copy all files
 COPY . .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir uv \
-    && uv pip install --system -r requirements.txt
+# Install dependencies
+RUN uv sync
 
 # Create data directory
 RUN mkdir -p /data
