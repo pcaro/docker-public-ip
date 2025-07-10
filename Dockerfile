@@ -9,8 +9,11 @@ COPY . .
 # Install dependencies
 RUN uv sync
 
-# Create data directory
-RUN mkdir -p /data
+# Create data and config directories
+RUN mkdir -p /data /config
+
+# Copy default configuration
+COPY config/ /config/
 
 # Expose web interface port
 EXPOSE 8080

@@ -1,0 +1,15 @@
+# IP Services Configuration
+# One service URL per line
+# Lines starting with # are ignored
+# These services return your public IP address as plain text
+
+https://icanhazip.com
+https://checkip.amazonaws.com
+https://ipinfo.io/ip
+https://wtfismyip.com/text
+https://api.ipify.org
+https://ifconfig.io/ip
+https://www.moanmyip.com/simple
+https://ifconfig.co/ip
+https://ifconfig.me/ip
+https://ipecho.net/plain
